@@ -5,7 +5,7 @@ using Godot;
 public partial class GenerateTerrain : Node3D
 {
     [Export]
-    public int size = 1;
+    public int size = 15;
 
     [Export]
     public int chunk_size = 32;
@@ -20,20 +20,18 @@ public partial class GenerateTerrain : Node3D
     {
         noise.Noise = new FastNoiseLite();
 
-        for (int x = 0; x < size; x++)
+        for (int x = -((size - 1) / 2); x < ((size + 1) / 2); x++)
         {
-            for (int z = 0; z < size; z++)
+            for (int z = -((size - 1) / 2); z < ((size + 1) / 2); z++)
             {
                 GenerateChunk(x, z);
             }
         }
-
-        GlobalPosition -= new Vector3(size * chunk_size / 2, 0, size * chunk_size / 2);
     }
 
     private void GenerateChunk(int x, int z)
     {
-        string id = $"{x}:{z}";
+        string id = $"{x}_{z}";
 
         if (HasNode(id))
         {
@@ -49,7 +47,7 @@ public partial class GenerateTerrain : Node3D
         Node3D chunk = chunk_scene.Instantiate<Node3D>();
         chunk
             .GetChild<GenerateChunk>(0)
-            .Generate(chunk_size, noise.Noise, new Vector3(x * chunk_size, 0, z * chunk_size));
+            .Generate(id, chunk_size, noise.Noise, new Vector3(x * chunk_size, 0, z * chunk_size));
         chunk.Translate(new Vector3(x * chunk_size, 0, z * chunk_size));
         chunk_cache[id] = chunk;
         AddChild(chunk);
@@ -57,11 +55,11 @@ public partial class GenerateTerrain : Node3D
 
     private void DestroyChunk(int x, int z)
     {
-        string id = $"{x}:{z}";
+        string id = $"{x}_{z}";
 
         if (HasNode(id))
         {
-            RemoveChild(chunk_cache[id] as Node3D);
+            RemoveChild(GetNode(id));
         }
     }
 
@@ -78,12 +76,17 @@ public partial class GenerateTerrain : Node3D
         }
 
         Vector2I chunk_delta = current_chunk - last_chunk;
-        GD.Print(chunk_delta);
+
         for (int i = 0; i < size; i++)
         {
             GenerateChunk(
-                current_chunk.X + Math.Abs(chunk_delta.Y) * (-size / 2 + i),
-                current_chunk.Y + Math.Abs(chunk_delta.X) * (-size / 2 + i)
+                current_chunk.X + chunk_delta.X * ((size - 1) / 2) + Math.Abs(chunk_delta.Y) * (-(size - 1) / 2 + i),
+                current_chunk.Y + chunk_delta.Y * ((size - 1) / 2) + Math.Abs(chunk_delta.X) * (-(size - 1) / 2 + i)
+            );
+
+            DestroyChunk(
+                current_chunk.X + chunk_delta.X * (-(size + 1) / 2) + Math.Abs(chunk_delta.Y) * (-(size - 1) / 2 + i),
+                current_chunk.Y + chunk_delta.Y * (-(size + 1) / 2) + Math.Abs(chunk_delta.X) * (-(size - 1) / 2 + i)
             );
         }
         last_chunk = current_chunk;

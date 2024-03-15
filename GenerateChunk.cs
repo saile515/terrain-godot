@@ -10,9 +10,9 @@ public partial class GenerateChunk : MeshInstance3D
     private List<Vector2> UVs = new List<Vector2>();
     private Material material = new Material();
 
-    public void Generate(int size, Noise noise, Vector3 world_offset)
+    public void Generate(string id, int size, Noise noise, Vector3 world_offset)
     {
-        GetParent().Name = $"{world_offset.X}:{world_offset.Z}";
+        GetParent().Name = id;
 
         for (int x = 0; x <= size; x++)
         {
