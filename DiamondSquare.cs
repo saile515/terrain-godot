@@ -6,8 +6,8 @@ public class DiamondSquare {
     private List<List<float>> height_map = new List<List<float>>();
     private int size;
     private Random random = new Random();
-    private float factor = 0.55f;
-    private float height_variation = 200f;
+    private float factor = 0.5f;
+    private float height_variation = 500f;
     public DiamondSquare(int _size) {
         size = _size;
         for (int x = 0; x < size; x++) {
@@ -17,10 +17,10 @@ public class DiamondSquare {
             }
         }
 
-        height_map[0][0] = (float)random.NextDouble() * height_variation;
-        height_map[size - 1][0] = (float)random.NextDouble() * height_variation;
-        height_map[0][size - 1] = (float)random.NextDouble() * height_variation;
-        height_map[size - 1][size - 1] = (float)random.NextDouble() * height_variation;
+        height_map[0][0] = (float)random.NextDouble() * height_variation / 4;
+        height_map[size - 1][0] = (float)random.NextDouble() * height_variation / 4;
+        height_map[0][size - 1] = (float)random.NextDouble() * height_variation / 4;
+        height_map[size - 1][size - 1] = (float)random.NextDouble() * height_variation / 4;
 
         Step(1);
     }    
@@ -41,7 +41,11 @@ public class DiamondSquare {
 
         for (int x = 0; x < size - gap; x += gap) {
             for (int z = 0; z < size - gap; z += gap) {
-                // GD.Print(height_map[x][z], ", ", height_map[x + gap][z], ", ", height_map[x][z + gap], ", ", height_map[x + gap][z + gap]);
+                if (k < 3) {
+                    height_map[x + gap / 2][z + gap / 2] = height_variation;
+                    continue;
+                }
+
                 height_map[x + gap / 2][z + gap / 2] = (height_map[x][z] + height_map[x + gap][z] + height_map[x][z + gap] + height_map[x + gap][z + gap]) / 4 + ((float)random.NextDouble() - 0.5f) * height_variation * MathF.Pow(factor, k);
             }
         }
