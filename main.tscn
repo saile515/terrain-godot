@@ -1,16 +1,38 @@
-[gd_scene load_steps=3 format=3 uid="uid://bxsfrmpej74g7"]
+[gd_scene load_steps=6 format=3 uid="uid://bxsfrmpej74g7"]
 
 [ext_resource type="Script" path="res://Camera.cs" id="1_tdbhp"]
 [ext_resource type="Script" path="res://GenerateTerrain.cs" id="2_vcdnh"]
 
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_yiek8"]
+sky_top_color = Color(0.172549, 0.67451, 0.776471, 1)
+sky_horizon_color = Color(0.117647, 0.458824, 0.745098, 1)
+ground_bottom_color = Color(0.105882, 0.215686, 0.521569, 1)
+ground_horizon_color = Color(0.117647, 0.458824, 0.745098, 1)
+ground_curve = 0.452549
+
+[sub_resource type="Sky" id="Sky_syuqy"]
+sky_material = SubResource("ProceduralSkyMaterial_yiek8")
+
+[sub_resource type="Environment" id="Environment_5eixd"]
+background_mode = 2
+sky = SubResource("Sky_syuqy")
+ambient_light_source = 2
+ambient_light_color = Color(1, 1, 1, 1)
+ambient_light_energy = 0.21
+fog_light_color = Color(0.364706, 0.780392, 0.960784, 1)
+volumetric_fog_density = 0.0007
+volumetric_fog_albedo = Color(0.992157, 1, 1, 1)
+
 [node name="Scene" type="Node3D"]
 
 [node name="Camera3D" type="Camera3D" parent="."]
+environment = SubResource("Environment_5eixd")
 script = ExtResource("1_tdbhp")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0.965926, 0.258819, 0, -0.258819, 0.965926, 0, 39, 0)
 light_color = Color(0.94902, 1, 1, 1)
+light_energy = 0.892
 shadow_enabled = true
 
 [node name="Terrain" type="Node3D" parent="."]

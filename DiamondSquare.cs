@@ -2,17 +2,22 @@ using System;
 using System.Collections.Generic;
 using Godot;
 
-public class DiamondSquare {
+public class DiamondSquare
+{
     private List<List<float>> height_map = new List<List<float>>();
     private int size;
     private Random random = new Random();
     private float factor = 0.5f;
     private float height_variation = 500f;
-    public DiamondSquare(int _size) {
+
+    public DiamondSquare(int _size)
+    {
         size = _size;
-        for (int x = 0; x < size; x++) {
+        for (int x = 0; x < size; x++)
+        {
             height_map.Add(new List<float>());
-            for (int z = 0; z < size; z++) {
+            for (int z = 0; z < size; z++)
+            {
                 height_map[x].Add(0.0f);
             }
         }
@@ -23,65 +28,89 @@ public class DiamondSquare {
         height_map[size - 1][size - 1] = (float)random.NextDouble() * height_variation / 4;
 
         Step(1);
-    }    
+    }
 
-    public float get(int x, int z) {
-        if (x >= height_map.Count || x < 0 || z >= height_map[x].Count || z < 0) {
+    public float get(int x, int z)
+    {
+        if (x >= height_map.Count || x < 0 || z >= height_map[x].Count || z < 0)
+        {
             return 0.0f;
         }
         return height_map[x][z];
     }
 
-    private void Step(int k) {
+    private void Step(int k)
+    {
         int gap = (int)((size - 1) / Math.Pow(2, k - 1));
-        
-        if (gap == 1) {
+
+        if (gap == 1)
+        {
             return;
         }
 
-        for (int x = 0; x < size - gap; x += gap) {
-            for (int z = 0; z < size - gap; z += gap) {
-                if (k < 3) {
-                    height_map[x + gap / 2][z + gap / 2] = height_variation;
-                    continue;
-                }
-
-                height_map[x + gap / 2][z + gap / 2] = (height_map[x][z] + height_map[x + gap][z] + height_map[x][z + gap] + height_map[x + gap][z + gap]) / 4 + ((float)random.NextDouble() - 0.5f) * height_variation * MathF.Pow(factor, k);
+        for (int x = 0; x < size - gap; x += gap)
+        {
+            for (int z = 0; z < size - gap; z += gap)
+            {
+                height_map[x + gap / 2][z + gap / 2] =
+                    (
+                        height_map[x][z]
+                        + height_map[x + gap][z]
+                        + height_map[x][z + gap]
+                        + height_map[x + gap][z + gap]
+                    ) / 4
+                    + ((float)random.NextDouble() - 0.5f) * height_variation * MathF.Pow(factor, k);
             }
         }
 
-        for (int z = 0; z < size; z += gap / 2) {
+        for (int z = 0; z < size; z += gap / 2)
+        {
             int offset = z % gap == 0 ? gap / 2 : 0;
-            for (int x = 0; x < size - offset; x += gap) {
+            for (int x = 0; x < size - offset; x += gap)
+            {
                 // GD.Print(k, ", ", x, ", ", z, ", ", gap, ", ", offset);
                 int neighbors = 4;
                 float total = 0.0f;
 
-                if (x + offset == 0) {
+                if (x + offset == 0)
+                {
                     neighbors--;
-                } else {
+                }
+                else
+                {
                     total += height_map[x + offset - gap / 2][z];
                 }
 
-                if (x + offset == size - 1) {
+                if (x + offset == size - 1)
+                {
                     neighbors--;
-                } else {
+                }
+                else
+                {
                     total += height_map[x + offset + gap / 2][z];
                 }
 
-                if (z == 0) {
+                if (z == 0)
+                {
                     neighbors--;
-                } else {
+                }
+                else
+                {
                     total += height_map[x + offset][z - gap / 2];
                 }
 
-                if (z == size - 1) {
+                if (z == size - 1)
+                {
                     neighbors--;
-                } else {
+                }
+                else
+                {
                     total += height_map[x + offset][z + gap / 2];
                 }
 
-                height_map[x + offset][z] = total / neighbors + ((float)random.NextDouble() - 0.5f) * height_variation * MathF.Pow(factor, k);
+                height_map[x + offset][z] =
+                    total / neighbors
+                    + ((float)random.NextDouble() - 0.5f) * height_variation * MathF.Pow(factor, k);
             }
         }
 

@@ -8,7 +8,7 @@ public partial class GenerateTerrain : Node3D
     public const int tile_size = 32;
 
     [Export]
-    public const int render_distance = 15;
+    public const int render_distance = 32;
 
     [Export]
     public const int chunk_size = 32;
@@ -81,13 +81,21 @@ public partial class GenerateTerrain : Node3D
         for (int i = 0; i < render_distance; i++)
         {
             GenerateChunk(
-                current_chunk.X + chunk_delta.X * ((render_distance - 1) / 2) + Math.Abs(chunk_delta.Y) * (-(render_distance - 1) / 2 + i),
-                current_chunk.Y + chunk_delta.Y * ((render_distance - 1) / 2) + Math.Abs(chunk_delta.X) * (-(render_distance - 1) / 2 + i)
+                current_chunk.X
+                    + chunk_delta.X * ((render_distance - 1) / 2)
+                    + Math.Abs(chunk_delta.Y) * (-(render_distance - 1) / 2 + i),
+                current_chunk.Y
+                    + chunk_delta.Y * ((render_distance - 1) / 2)
+                    + Math.Abs(chunk_delta.X) * (-(render_distance - 1) / 2 + i)
             );
 
             DestroyChunk(
-                current_chunk.X + chunk_delta.X * (-(render_distance + 1) / 2) + Math.Abs(chunk_delta.Y) * (-(render_distance - 1) / 2 + i),
-                current_chunk.Y + chunk_delta.Y * (-(render_distance + 1) / 2) + Math.Abs(chunk_delta.X) * (-(render_distance - 1) / 2 + i)
+                current_chunk.X
+                    + chunk_delta.X * (-(render_distance + 1) / 2)
+                    + Math.Abs(chunk_delta.Y) * (-(render_distance - 1) / 2 + i),
+                current_chunk.Y
+                    + chunk_delta.Y * (-(render_distance + 1) / 2)
+                    + Math.Abs(chunk_delta.X) * (-(render_distance - 1) / 2 + i)
             );
         }
         last_chunk = current_chunk;

@@ -19,7 +19,11 @@ public partial class GenerateChunk : MeshInstance3D
             for (int z = 0; z <= size; z++)
             {
                 vertices.Add(
-                    new Vector3(x, height_map.get((int)world_offset.X + x, (int)world_offset.Z + z), z)
+                    new Vector3(
+                        x,
+                        height_map.get((int)world_offset.X + x, (int)world_offset.Z + z),
+                        z
+                    )
                 );
                 UVs.Add(new Vector2(x / (size + 1), z / (size + 1)));
             }
