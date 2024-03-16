@@ -10,7 +10,7 @@ public partial class GenerateChunk : MeshInstance3D
     private List<Vector2> UVs = new List<Vector2>();
     private Material material = new Material();
 
-    public void Generate(string id, int size, Noise noise, Vector3 world_offset)
+    public void Generate(string id, int size, DiamondSquare height_map, Vector3 world_offset)
     {
         GetParent().Name = id;
 
@@ -19,7 +19,7 @@ public partial class GenerateChunk : MeshInstance3D
             for (int z = 0; z <= size; z++)
             {
                 vertices.Add(
-                    new Vector3(x, noise.GetNoise2D(world_offset.X + x, world_offset.Z + z) * 10, z)
+                    new Vector3(x, height_map.get((int)world_offset.X + x, (int)world_offset.Z + z), z)
                 );
                 UVs.Add(new Vector2(x / (size + 1), z / (size + 1)));
             }

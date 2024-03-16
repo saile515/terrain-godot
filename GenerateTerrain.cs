@@ -5,24 +5,25 @@ using Godot;
 public partial class GenerateTerrain : Node3D
 {
     [Export]
-    public int size = 15;
+    public const int tile_size = 32;
 
     [Export]
-    public int chunk_size = 32;
+    public const int render_distance = 15;
+
+    [Export]
+    public const int chunk_size = 32;
 
     private PackedScene chunk_scene = GD.Load<PackedScene>("res://chunk.tscn");
-    private NoiseTexture2D noise = new NoiseTexture2D();
+    private DiamondSquare height_map = new DiamondSquare(tile_size * chunk_size + 1);
 
     private Hashtable chunk_cache = new Hashtable();
     private Vector2I last_chunk = Vector2I.Zero;
 
     public override void _Ready()
     {
-        noise.Noise = new FastNoiseLite();
-
-        for (int x = -((size - 1) / 2); x < ((size + 1) / 2); x++)
+        for (int x = -((render_distance - 1) / 2); x < ((render_distance + 1) / 2); x++)
         {
-            for (int z = -((size - 1) / 2); z < ((size + 1) / 2); z++)
+            for (int z = -((render_distance - 1) / 2); z < ((render_distance + 1) / 2); z++)
             {
                 GenerateChunk(x, z);
             }
@@ -47,7 +48,7 @@ public partial class GenerateTerrain : Node3D
         Node3D chunk = chunk_scene.Instantiate<Node3D>();
         chunk
             .GetChild<GenerateChunk>(0)
-            .Generate(id, chunk_size, noise.Noise, new Vector3(x * chunk_size, 0, z * chunk_size));
+            .Generate(id, chunk_size, height_map, new Vector3(x * chunk_size, 0, z * chunk_size));
         chunk.Translate(new Vector3(x * chunk_size, 0, z * chunk_size));
         chunk_cache[id] = chunk;
         AddChild(chunk);
@@ -77,16 +78,16 @@ public partial class GenerateTerrain : Node3D
 
         Vector2I chunk_delta = current_chunk - last_chunk;
 
-        for (int i = 0; i < size; i++)
+        for (int i = 0; i < render_distance; i++)
         {
             GenerateChunk(
-                current_chunk.X + chunk_delta.X * ((size - 1) / 2) + Math.Abs(chunk_delta.Y) * (-(size - 1) / 2 + i),
-                current_chunk.Y + chunk_delta.Y * ((size - 1) / 2) + Math.Abs(chunk_delta.X) * (-(size - 1) / 2 + i)
+                current_chunk.X + chunk_delta.X * ((render_distance - 1) / 2) + Math.Abs(chunk_delta.Y) * (-(render_distance - 1) / 2 + i),
+                current_chunk.Y + chunk_delta.Y * ((render_distance - 1) / 2) + Math.Abs(chunk_delta.X) * (-(render_distance - 1) / 2 + i)
             );
 
             DestroyChunk(
-                current_chunk.X + chunk_delta.X * (-(size + 1) / 2) + Math.Abs(chunk_delta.Y) * (-(size - 1) / 2 + i),
-                current_chunk.Y + chunk_delta.Y * (-(size + 1) / 2) + Math.Abs(chunk_delta.X) * (-(size - 1) / 2 + i)
+                current_chunk.X + chunk_delta.X * (-(render_distance + 1) / 2) + Math.Abs(chunk_delta.Y) * (-(render_distance - 1) / 2 + i),
+                current_chunk.Y + chunk_delta.Y * (-(render_distance + 1) / 2) + Math.Abs(chunk_delta.X) * (-(render_distance - 1) / 2 + i)
             );
         }
         last_chunk = current_chunk;
