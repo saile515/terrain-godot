@@ -2,17 +2,18 @@ using System;
 using System.Collections.Generic;
 using Godot;
 
-public class DiamondSquare
+public partial class DiamondSquare : GodotObject
 {
     private List<List<float>> height_map = new List<List<float>>();
     private int size;
     private Random random = new Random();
     private float factor = 0.5f;
-    private float height_variation = 500f;
+    private float height_variation;
 
     public DiamondSquare(int _size)
     {
         size = _size;
+        height_variation = _size / 2;
         for (int x = 0; x < size; x++)
         {
             height_map.Add(new List<float>());
@@ -22,10 +23,10 @@ public class DiamondSquare
             }
         }
 
-        height_map[0][0] = (float)random.NextDouble() * height_variation / 4;
-        height_map[size - 1][0] = (float)random.NextDouble() * height_variation / 4;
-        height_map[0][size - 1] = (float)random.NextDouble() * height_variation / 4;
-        height_map[size - 1][size - 1] = (float)random.NextDouble() * height_variation / 4;
+        height_map[0][0] = ((float)random.NextDouble() - 0.5f) * height_variation;
+        height_map[size - 1][0] = ((float)random.NextDouble() - 0.5f) * height_variation;
+        height_map[0][size - 1] = ((float)random.NextDouble() - 0.5f) * height_variation;
+        height_map[size - 1][size - 1] = ((float)random.NextDouble() - 0.5f) * height_variation;
 
         Step(1);
     }
@@ -68,7 +69,6 @@ public class DiamondSquare
             int offset = z % gap == 0 ? gap / 2 : 0;
             for (int x = 0; x < size - offset; x += gap)
             {
-                // GD.Print(k, ", ", x, ", ", z, ", ", gap, ", ", offset);
                 int neighbors = 4;
                 float total = 0.0f;
 

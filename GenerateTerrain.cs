@@ -1,11 +1,12 @@
 using System;
 using System.Collections;
+using System.Threading;
 using Godot;
 
 public partial class GenerateTerrain : Node3D
 {
     [Export]
-    public const int tile_size = 32;
+    public const int tile_size = 256;
 
     [Export]
     public const int render_distance = 32;
@@ -21,17 +22,22 @@ public partial class GenerateTerrain : Node3D
 
     public override void _Ready()
     {
-        for (int x = -((render_distance - 1) / 2); x < ((render_distance + 1) / 2); x++)
-        {
-            for (int z = -((render_distance - 1) / 2); z < ((render_distance + 1) / 2); z++)
-            {
-                GenerateChunk(x, z);
-            }
-        }
+        GetNode<Camera3D>("/root/Scene/Camera3D")
+            .Translate(
+                new Vector3(
+                    tile_size * chunk_size / 2,
+                    height_map.get(tile_size * chunk_size / 2, tile_size * chunk_size / 2) + 5,
+                    tile_size * chunk_size / 2
+                )
+            );
     }
 
     private void GenerateChunk(int x, int z)
     {
+        if (x < 0 || z < 0 || x > tile_size || z > tile_size)
+        {
+            return;
+        }
         string id = $"{x}_{z}";
 
         if (HasNode(id))
@@ -46,12 +52,24 @@ public partial class GenerateTerrain : Node3D
         }
 
         Node3D chunk = chunk_scene.Instantiate<Node3D>();
-        chunk
-            .GetChild<GenerateChunk>(0)
-            .Generate(id, chunk_size, height_map, new Vector3(x * chunk_size, 0, z * chunk_size));
-        chunk.Translate(new Vector3(x * chunk_size, 0, z * chunk_size));
-        chunk_cache[id] = chunk;
-        AddChild(chunk);
+
+        void GenerateThread()
+        {
+            chunk
+                .GetChild<GenerateChunk>(0)
+                .Generate(
+                    id,
+                    chunk_size,
+                    height_map,
+                    new Vector3(x * chunk_size, 0, z * chunk_size)
+                );
+            chunk_cache[id] = chunk;
+            chunk.CallDeferred("translate", new Vector3(x * chunk_size, 0, z * chunk_size));
+            CallDeferred("add_child", chunk);
+        }
+
+        Thread thread = new(new ThreadStart(GenerateThread));
+        thread.Start();
     }
 
     private void DestroyChunk(int x, int z)
@@ -76,28 +94,22 @@ public partial class GenerateTerrain : Node3D
             return;
         }
 
-        Vector2I chunk_delta = current_chunk - last_chunk;
-
-        for (int i = 0; i < render_distance; i++)
+        foreach (Node node in GetChildren())
         {
-            GenerateChunk(
-                current_chunk.X
-                    + chunk_delta.X * ((render_distance - 1) / 2)
-                    + Math.Abs(chunk_delta.Y) * (-(render_distance - 1) / 2 + i),
-                current_chunk.Y
-                    + chunk_delta.Y * ((render_distance - 1) / 2)
-                    + Math.Abs(chunk_delta.X) * (-(render_distance - 1) / 2 + i)
-            );
-
-            DestroyChunk(
-                current_chunk.X
-                    + chunk_delta.X * (-(render_distance + 1) / 2)
-                    + Math.Abs(chunk_delta.Y) * (-(render_distance - 1) / 2 + i),
-                current_chunk.Y
-                    + chunk_delta.Y * (-(render_distance + 1) / 2)
-                    + Math.Abs(chunk_delta.X) * (-(render_distance - 1) / 2 + i)
-            );
+            RemoveChild(node);
         }
+
+        for (int x = 0; x < render_distance; x++)
+        {
+            for (int z = 0; z < render_distance; z++)
+            {
+                GenerateChunk(
+                    current_chunk.X + x - render_distance / 2,
+                    current_chunk.Y + z - render_distance / 2
+                );
+            }
+        }
+
         last_chunk = current_chunk;
     }
 }
