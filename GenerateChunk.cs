@@ -19,17 +19,20 @@ public partial class GenerateChunk : MeshInstance3D
     )
     {
         GetParent().Name = id;
-        int lod_size = (int)Math.Round(Math.Pow(2, lod - 1));
+        int lod_size = (int)Math.Round(Math.Pow(3, lod - 1));
 
-        for (int x = 0; x <= size * lod_size; x += lod_size)
+        for (int x = 0; x <= size; x++)
         {
-            for (int z = 0; z <= size * lod_size; z += lod_size)
+            for (int z = 0; z <= size; z++)
             {
                 vertices.Add(
                     new Vector3(
-                        x,
-                        height_map.get((int)world_offset.X + x, (int)world_offset.Z + z),
-                        z
+                        x * lod_size,
+                        height_map.get(
+                            (int)world_offset.X + x * lod_size,
+                            (int)world_offset.Z + z * lod_size
+                        ),
+                        z * lod_size
                     )
                 );
                 UVs.Add(new Vector2(x / (size + 1), z / (size + 1)));
