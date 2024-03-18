@@ -32,7 +32,7 @@ public partial class GenerateTerrain : Node3D
             );
     }
 
-    private void GenerateChunk(int x, int z)
+    private void GenerateChunk(int x, int z, int lod)
     {
         if (x < 0 || z < 0 || x > tile_size || z > tile_size)
         {
@@ -61,7 +61,8 @@ public partial class GenerateTerrain : Node3D
                     id,
                     chunk_size,
                     height_map,
-                    new Vector3(x * chunk_size, 0, z * chunk_size)
+                    new Vector3(x * chunk_size, 0, z * chunk_size),
+                    lod
                 );
             chunk_cache[id] = chunk;
             chunk.CallDeferred("translate", new Vector3(x * chunk_size, 0, z * chunk_size));
@@ -99,14 +100,33 @@ public partial class GenerateTerrain : Node3D
             RemoveChild(node);
         }
 
-        for (int x = 0; x < render_distance; x++)
+        for (int lod = 1; lod < 4; lod++)
         {
-            for (int z = 0; z < render_distance; z++)
+            int lod_size = (int)Math.Round(Math.Pow(3, lod - 1));
+            int chunk_size = (int)Math.Round(Math.Pow(2, lod - 1));
+            for (int x = 0; x < render_distance * lod_size; x += chunk_size)
             {
-                GenerateChunk(
-                    current_chunk.X + x - render_distance / 2,
-                    current_chunk.Y + z - render_distance / 2
-                );
+                int local_x = current_chunk.X + x;
+                for (int z = 0; z < render_distance * lod_size; z += chunk_size)
+                {
+                    int local_z = current_chunk.Y + z;
+                    if (
+                        lod > 1
+                        && local_x < render_distance * lod_size * 2 / 3
+                        && local_z < render_distance * lod_size * 2 / 3
+                        && local_x > render_distance * lod_size / 3
+                        && local_z > render_distance * lod_size / 3
+                    )
+                    {
+                        continue;
+                    }
+
+                    GenerateChunk(
+                        local_x - render_distance * lod_size / 2,
+                        local_z - render_distance * lod_size / 2,
+                        lod
+                    );
+                }
             }
         }
 

@@ -10,13 +10,20 @@ public partial class GenerateChunk : MeshInstance3D
     private List<Vector2> UVs = new List<Vector2>();
     private ShaderMaterial material = new ShaderMaterial();
 
-    public void Generate(string id, int size, DiamondSquare height_map, Vector3 world_offset)
+    public void Generate(
+        string id,
+        int size,
+        DiamondSquare height_map,
+        Vector3 world_offset,
+        int lod
+    )
     {
         GetParent().Name = id;
+        int lod_size = (int)Math.Round(Math.Pow(2, lod - 1));
 
-        for (int x = 0; x <= size; x++)
+        for (int x = 0; x <= size * lod_size; x += lod_size)
         {
-            for (int z = 0; z <= size; z++)
+            for (int z = 0; z <= size * lod_size; z += lod_size)
             {
                 vertices.Add(
                     new Vector3(
@@ -51,7 +58,6 @@ public partial class GenerateChunk : MeshInstance3D
 
         for (int i = 0; i < vertices.Count; i++)
         {
-            surface_tool.SetColor(new Color(0.2f, 1.0f, 0.3f));
             surface_tool.SetUV(UVs[i]);
             surface_tool.AddVertex(vertices[i]);
         }
