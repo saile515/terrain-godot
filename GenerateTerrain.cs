@@ -35,24 +35,30 @@ public partial class GenerateTerrain : Node3D
         current_chunk.X += (int)MathF.Round(camera.GlobalPosition.X / chunk_size);
         current_chunk.Y += (int)MathF.Round(camera.GlobalPosition.Z / chunk_size);
 
-        for (int lod = 1; lod < 4; lod++)
+        void GenerateThread()
         {
-            int lod_size = (int)Math.Round(Math.Pow(3, lod - 1));
-            for (int x = 0; x < render_distance; x++)
+            for (int lod = 1; lod < 4; lod++)
             {
-                int local_x = (int)MathF.Floor(current_chunk.X / lod_size) + x;
-                for (int z = 0; z < render_distance; z++)
+                int lod_size = (int)Math.Round(Math.Pow(3, lod - 1));
+                for (int x = 0; x < render_distance; x++)
                 {
-                    int local_z = (int)MathF.Floor(current_chunk.Y / lod_size) + z;
+                    int local_x = (int)MathF.Floor(current_chunk.X / lod_size) + x;
+                    for (int z = 0; z < render_distance; z++)
+                    {
+                        int local_z = (int)MathF.Floor(current_chunk.Y / lod_size) + z;
 
-                    GenerateChunk(
-                        local_x - render_distance / 2,
-                        local_z - render_distance / 2,
-                        lod
-                    );
+                        GenerateChunk(
+                            local_x - render_distance / 2,
+                            local_z - render_distance / 2,
+                            lod
+                        );
+                    }
                 }
             }
         }
+
+        Thread thread = new(new ThreadStart(GenerateThread));
+        thread.Start();
     }
 
     public void GenerateChunk(int x, int z, int lod)
