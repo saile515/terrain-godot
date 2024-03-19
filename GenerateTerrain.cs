@@ -9,7 +9,7 @@ public partial class GenerateTerrain : Node3D
     public const int tile_size = 256;
 
     [Export]
-    public const int render_distance = 27;
+    public const int render_distance = 32;
 
     [Export]
     public const int chunk_size = 32;
@@ -22,17 +22,40 @@ public partial class GenerateTerrain : Node3D
 
     public override void _Ready()
     {
-        GetNode<Camera3D>("/root/Scene/Camera3D")
-            .Translate(
-                new Vector3(
-                    tile_size * chunk_size / 2,
-                    height_map.get(tile_size * chunk_size / 2, tile_size * chunk_size / 2) + 5,
-                    tile_size * chunk_size / 2
-                )
-            );
+        Camera3D camera = GetNode<Camera3D>("/root/Scene/Camera3D");
+        camera.Translate(
+            new Vector3(
+                tile_size * chunk_size / 2,
+                height_map.get(tile_size * chunk_size / 2, tile_size * chunk_size / 2) + 5,
+                tile_size * chunk_size / 2
+            )
+        );
+
+        Vector2I current_chunk = Vector2I.Zero;
+        current_chunk.X += (int)MathF.Round(camera.GlobalPosition.X / chunk_size);
+        current_chunk.Y += (int)MathF.Round(camera.GlobalPosition.Z / chunk_size);
+
+        for (int lod = 1; lod < 4; lod++)
+        {
+            int lod_size = (int)Math.Round(Math.Pow(3, lod - 1));
+            for (int x = 0; x < render_distance; x++)
+            {
+                int local_x = (int)MathF.Floor(current_chunk.X / lod_size) + x;
+                for (int z = 0; z < render_distance; z++)
+                {
+                    int local_z = (int)MathF.Floor(current_chunk.Y / lod_size) + z;
+
+                    GenerateChunk(
+                        local_x - render_distance / 2,
+                        local_z - render_distance / 2,
+                        lod
+                    );
+                }
+            }
+        }
     }
 
-    private void GenerateChunk(int x, int z, int lod)
+    public void GenerateChunk(int x, int z, int lod)
     {
         int lod_size = (int)Math.Pow(3, lod - 1);
         if (
@@ -70,13 +93,12 @@ public partial class GenerateTerrain : Node3D
         thread.Start();
     }
 
-    private void DestroyChunk(int x, int z)
+    public void RemoveChunk(int x, int y, int lod)
     {
-        string id = $"{x}_{z}";
-
+        string id = $"{lod}_{x}_{y}";
         if (HasNode(id))
         {
-            RemoveChild(GetNode(id));
+            RemoveChild(GetNode($"{lod}_{x}_{y}"));
         }
     }
 
@@ -92,40 +114,53 @@ public partial class GenerateTerrain : Node3D
             return;
         }
 
-        Vector2I chunk_delta = current_chunk - last_chunk;
-
-        var children = GetChildren();
-
         void GenerateThread()
         {
-            foreach (Node node in children)
-            {
-                CallDeferred(MethodName.RemoveChild, node);
-            }
-
             for (int lod = 1; lod < 4; lod++)
             {
                 int lod_size = (int)Math.Round(Math.Pow(3, lod - 1));
-                for (int x = 0; x < render_distance * lod_size; x++)
-                {
-                    int local_x = (int)MathF.Floor(current_chunk.X / lod_size) + x;
-                    for (int z = 0; z < render_distance * lod_size; z++)
-                    {
-                        int local_z = (int)MathF.Floor(current_chunk.Y / lod_size) + z;
+                Vector2I chunk_delta =
+                    new(
+                        ((int)MathF.Floor(current_chunk.X / lod_size))
+                            - ((int)MathF.Floor(last_chunk.X / lod_size)),
+                        ((int)MathF.Floor(current_chunk.Y / lod_size))
+                            - ((int)MathF.Floor(last_chunk.Y / lod_size))
+                    );
 
-                        GenerateChunk(
-                            local_x - render_distance * lod_size / 2,
-                            local_z - render_distance * lod_size / 2,
-                            lod
-                        );
-                    }
+                if (chunk_delta.Length() == 0)
+                {
+                    continue;
+                }
+
+                int local_x = (int)MathF.Floor(current_chunk.X / lod_size);
+                int local_z = (int)MathF.Floor(current_chunk.Y / lod_size);
+                int offset = (int)MathF.Floor(render_distance / 2);
+
+                for (int i = 0; i < render_distance; i++)
+                {
+                    CallDeferred(
+                        nameof(RemoveChunk),
+                        local_x
+                            + Math.Abs(chunk_delta.Y) * (i - offset)
+                            + chunk_delta.X * (-1 - offset),
+                        local_z
+                            + Math.Abs(chunk_delta.X) * (i - offset)
+                            + chunk_delta.Y * (-1 - offset),
+                        lod
+                    );
+                    CallDeferred(
+                        nameof(GenerateChunk),
+                        local_x + Math.Abs(chunk_delta.Y) * (i - offset) + chunk_delta.X * offset,
+                        local_z + Math.Abs(chunk_delta.X) * (i - offset) + chunk_delta.Y * offset,
+                        lod
+                    );
                 }
             }
+
+            last_chunk = current_chunk;
         }
 
         Thread thread = new(new ThreadStart(GenerateThread));
         thread.Start();
-
-        last_chunk = current_chunk;
     }
 }
