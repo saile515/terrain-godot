@@ -23,10 +23,14 @@ public partial class GenerateTerrain : Node3D
     public override void _Ready()
     {
         Camera3D camera = GetNode<Camera3D>("/root/Scene/Camera3D");
+        float camera_height = height_map.get(
+            tile_size * chunk_size / 2,
+            tile_size * chunk_size / 2
+        );
         camera.Translate(
             new Vector3(
                 tile_size * chunk_size / 2,
-                height_map.get(tile_size * chunk_size / 2, tile_size * chunk_size / 2) + 5,
+                (camera_height > -150 ? camera_height : -150) + 5,
                 tile_size * chunk_size / 2
             )
         );

@@ -25,15 +25,12 @@ public partial class GenerateChunk : MeshInstance3D
         {
             for (int z = 0; z <= size; z++)
             {
+                float height = height_map.get(
+                    (int)world_offset.X + x * lod_size,
+                    (int)world_offset.Z + z * lod_size
+                );
                 vertices.Add(
-                    new Vector3(
-                        x * lod_size,
-                        height_map.get(
-                            (int)world_offset.X + x * lod_size,
-                            (int)world_offset.Z + z * lod_size
-                        ),
-                        z * lod_size
-                    )
+                    new Vector3(x * lod_size, height > -150 ? height : -150, z * lod_size)
                 );
                 UVs.Add(new Vector2(x / (size + 1), z / (size + 1)));
             }
